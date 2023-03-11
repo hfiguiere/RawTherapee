@@ -258,9 +258,9 @@ void TagDirectory::printAll (unsigned int level) const
  * @return True if everything went fine, false otherwise
  */
 bool TagDirectory::CPBDump (const Glib::ustring &commFName, const Glib::ustring &imageFName, const Glib::ustring &profileFName, const Glib::ustring &defaultPParams,
-                            const CacheImageData* cfs, const bool flagMode, Glib::KeyFile *keyFile, Glib::ustring tagDirName) const
+                            const CacheImageData* cfs, const bool flagMode, const Glib::RefPtr<Glib::KeyFile>& keyFile, Glib::ustring tagDirName) const
 {
-    const auto kf = keyFile ? keyFile : new Glib::KeyFile;
+    const auto kf = keyFile ? keyFile : Glib::KeyFile::create();
 
     if (!kf) {
         return false;
@@ -281,7 +281,6 @@ bool TagDirectory::CPBDump (const Glib::ustring &commFName, const Glib::ustring 
 
         if (f == nullptr) {
             printf ("TagDirectory::keyFileDump(\"%s\") >>> Error: unable to open file with write access!\n", commFName.c_str());
-            delete kf;
             return false;
         }
 
@@ -341,7 +340,6 @@ bool TagDirectory::CPBDump (const Glib::ustring &commFName, const Glib::ustring 
         } catch (Glib::KeyFileError&) {}
 
         fclose (f);
-        delete kf;
     }
 
     return true;

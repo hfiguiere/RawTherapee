@@ -52,7 +52,12 @@ bool DynamicProfileRule::Optional::operator() (const Glib::ustring &val) const
 
     if (value.find ("re:") == 0) {
         // this is a regexp
-        return Glib::Regex::match_simple (value.substr (3), val, Glib::REGEX_CASELESS);
+        return Glib::Regex::match_simple (value.substr (3), val,
+#ifdef GLIBMM_268
+                                          Glib::Regex::CompileFlags::CASELESS);
+#else
+                                          Glib::REGEX_CASELESS);
+#endif
     } else {
         // normal string comparison
         return value.casefold() == val.casefold();
@@ -171,7 +176,8 @@ void set_optional (Glib::KeyFile &kf, const Glib::ustring &group,
 bool DynamicProfileRules::loadRules()
 {
     dynamicRules.clear();
-    Glib::KeyFile kf;
+    Glib::RefPtr<Glib::KeyFile> pkf = Glib::KeyFile::create();
+    Glib::KeyFile& kf = *pkf;
 
     try {
         if (!kf.load_from_file (Glib::build_filename (Options::rtdir, "dynamicprofile.cfg"))) {
@@ -234,7 +240,8 @@ bool DynamicProfileRules::storeRules()
         printf ("saving dynamic profiles...\n");
     }
 
-    Glib::KeyFile kf;
+    Glib::RefPtr<Glib::KeyFile> pkf = Glib::KeyFile::create();
+    Glib::KeyFile& kf = *pkf;
 
     for (auto &rule : dynamicRules) {
         std::ostringstream buf;

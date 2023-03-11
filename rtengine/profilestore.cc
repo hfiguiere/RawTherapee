@@ -183,7 +183,11 @@ bool ProfileStore::parseDir (Glib::ustring& realPath, Glib::ustring& virtualPath
     bool fileFound = false;
 
     // reload the available profiles from the profile dir
+#ifdef GLIBMM_268
+    if (!realPath.empty() && Glib::file_test (realPath, Glib::FileTest::EXISTS) && Glib::file_test (realPath, Glib::FileTest::IS_DIR)) {
+#else
     if (!realPath.empty() && Glib::file_test (realPath, Glib::FILE_TEST_EXISTS) && Glib::file_test (realPath, Glib::FILE_TEST_IS_DIR)) {
+#endif
         unsigned int folder = 0; // folder's own Id
 
         // add this entry to the folder list
@@ -214,7 +218,11 @@ bool ProfileStore::parseDir (Glib::ustring& realPath, Glib::ustring& virtualPath
 
             Glib::ustring fname = Glib::build_filename (realPath, currDir);
 
+#ifdef GLIBMM_268
+            if (Glib::file_test (fname, Glib::FileTest::IS_DIR)) {
+#else
             if (Glib::file_test (fname, Glib::FILE_TEST_IS_DIR)) {
+#endif
                 Glib::ustring vp (Glib::build_filename (virtualPath, currDir));
                 Glib::ustring rp (Glib::build_filename (realPath,    currDir));
                 fileFound = parseDir (rp, vp, currDir, folder, level + 1, 0);
@@ -320,7 +328,7 @@ const ProfileStoreEntry* ProfileStore::findEntryFromFullPathU (Glib::ustring pat
     }
 
     // removing the filename
-    Glib::ustring fName = Glib::path_get_basename (path);
+    Glib::ustring fName = Glib::path_get_basename (path.c_str());
 
     if (!fName.empty()) {
         path = path.substr (0, path.length() - fName.length());
@@ -329,7 +337,7 @@ const ProfileStoreEntry* ProfileStore::findEntryFromFullPathU (Glib::ustring pat
         return nullptr;
     }
 
-    path = Glib::path_get_dirname (path);
+    path = Glib::path_get_dirname (path.c_str());
 
     // 1. find the path in the folder list
     int parentFolderId = findFolderId (path);

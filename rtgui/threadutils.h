@@ -24,14 +24,28 @@
 //#undef STRICT_MUTEX
 //#define STRICT_MUTEX 1
 
-#include <glibmm/threads.h>
+#ifdef USE_STD_MUTEX
+# include <condition_variable>
+# include <mutex>
+# include <thread>
+#else
+# include <glibmm/threads.h>
+#endif
 
 #include "../rtengine/noncopyable.h"
 
+#ifdef USE_STD_MUTEX
+#if STRICT_MUTEX && NDEBUG
+using MyMutexBase = std::mutex;
+#else
+using MyMutexBase = std::recursive_mutex;
+#endif
+#else
 #if STRICT_MUTEX && NDEBUG
 using MyMutexBase = Glib::Threads::Mutex;
 #else
 using MyMutexBase = Glib::Threads::RecMutex;
+#endif
 #endif
 
 /**
@@ -66,8 +80,13 @@ class MyMutex::MyLock :
 {
 public:
     explicit MyLock (MyMutex& mutex);
+#ifdef USE_STD_MUTEX
+    MyLock (MyMutex& mutex, std::defer_lock_t);
+    MyLock (MyMutex& mutex, std::try_to_lock_t);
+#else
     MyLock (MyMutex& mutex, Glib::Threads::NotLock);
     MyLock (MyMutex& mutex, Glib::Threads::TryLock);
+#endif
 
     ~MyLock ();
 
@@ -91,8 +110,13 @@ public:
     friend class MyWriterLock;
 
 private:
+#ifdef USE_STD_MUTEX
+    std::mutex mutex;
+    std::condition_variable cond;
+#else
     Glib::Threads::Mutex mutex;
     Glib::Threads::Cond cond;
+#endif
 
     std::size_t writerCount = 0;
     std::size_t readerCount = 0;
@@ -167,7 +191,11 @@ inline void MyMutex::lock ()
 
 inline bool MyMutex::trylock ()
 {
+#ifdef USE_STD_MUTEX
+    if (MyMutexBase::try_lock ()) {
+#else
     if (MyMutexBase::trylock ()) {
+#endif
 #if STRICT_MUTEX && !NDEBUG
         checkLock ();
 #endif
@@ -194,15 +222,25 @@ inline MyMutex::MyLock::MyLock (MyMutex& mutex)
     mutex.lock();
 }
 
+#ifdef USE_STD_MUTEX
+inline MyMutex::MyLock::MyLock (MyMutex& mutex, std::defer_lock_t)
+#else
 inline MyMutex::MyLock::MyLock (MyMutex& mutex, Glib::Threads::NotLock)
+#endif
     : mutex (mutex)
     , locked (false)
 {
 }
 
+#ifdef USE_STD_MUTEX
+inline MyMutex::MyLock::MyLock (MyMutex& mutex, std::try_to_lock_t)
+    : mutex (mutex)
+    , locked (mutex.try_lock ())
+#else
 inline MyMutex::MyLock::MyLock (MyMutex& mutex, Glib::Threads::TryLock)
     : mutex (mutex)
     , locked (mutex.trylock ())
+#endif
 {
 }
 
@@ -220,7 +258,11 @@ inline void MyMutex::MyLock::acquire ()
 }
 inline bool MyMutex::MyLock::try_acquire ()
 {
+#ifdef USE_STD_MUTEX
+    return locked = mutex.try_lock ();
+#else
     return locked = mutex.trylock ();
+#endif
 }
 
 inline void MyMutex::MyLock::release ()

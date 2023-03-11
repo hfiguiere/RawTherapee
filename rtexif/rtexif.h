@@ -29,15 +29,12 @@
 #include <string>
 #include <vector>
 
+#include <glibmm/keyfile.h>
 #include <glibmm/ustring.h>
 
 #include "../rtengine/noncopyable.h"
 #include "../rtengine/rawmetadatalocation.h"
 
-namespace Glib
-{
-    class KeyFile;
-}
 namespace rtengine
 {
 
@@ -193,7 +190,7 @@ public:
 
     void     printAll      (unsigned  int level = 0) const; // reentrant debug function, keep level=0 on first call !
     bool     CPBDump       (const Glib::ustring &commFName, const Glib::ustring &imageFName, const Glib::ustring &profileFName, const Glib::ustring &defaultPParams,
-                                    const CacheImageData* cfs, const bool flagMode, Glib::KeyFile *keyFile = nullptr, Glib::ustring tagDirName = "") const;
+                                    const CacheImageData* cfs, const bool flagMode, const Glib::RefPtr<Glib::KeyFile>& keyFile = Glib::RefPtr<Glib::KeyFile>(), Glib::ustring tagDirName = "") const;
     void     sort     ();
 };
 
