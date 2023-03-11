@@ -259,8 +259,7 @@ void FFManager::init(const Glib::ustring& pathname)
             names.emplace_back (Glib::build_filename (pathname, file->get_name ()));
         }
 
-    } catch (Glib::Exception&) {}
-
+    } catch (Glib::Error&) {}
     ffList.clear();
 
     for (size_t i = 0; i < names.size(); i++) {
@@ -319,7 +318,7 @@ ffInfo* FFManager::addFileInfo (const Glib::ustring& filename, bool pool)
 
         auto info = file->query_info("standard::name,standard::type,standard::is-hidden");
 
-        if (!info || info->get_file_type() == Gio::FILE_TYPE_DIRECTORY) {
+        if (!info || info->get_file_type() == Gio::FileType::DIRECTORY) {
             return nullptr;
         }
 

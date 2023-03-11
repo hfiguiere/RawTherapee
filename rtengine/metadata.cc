@@ -154,18 +154,18 @@ Exiv2Metadata::Exiv2Metadata(const Glib::ustring &path, bool merge_xmp_sidecar):
 
 void Exiv2Metadata::load() const
 {
-    if (!src_.empty() && !image_.get() && Glib::file_test(src_.c_str(), Glib::FILE_TEST_EXISTS)) {
+    if (!src_.empty() && !image_.get() && Glib::file_test(src_.c_str(), Glib::FileTest::EXISTS)) {
         CacheVal val;
         auto finfo = Gio::File::create_for_path(src_)->query_info(G_FILE_ATTRIBUTE_TIME_MODIFIED);
-        Glib::TimeVal xmp_mtime(0, 0);
+        Glib::DateTime xmp_mtime;
         if (merge_xmp_) {
             auto xmpname = xmpSidecarPath(src_);
-            if (Glib::file_test(xmpname.c_str(), Glib::FILE_TEST_EXISTS)) {
-                xmp_mtime = Gio::File::create_for_path(xmpname)->query_info(G_FILE_ATTRIBUTE_TIME_MODIFIED)->modification_time();
+            if (Glib::file_test(xmpname.c_str(), Glib::FileTest::EXISTS)) {
+                xmp_mtime = Gio::File::create_for_path(xmpname)->query_info(G_FILE_ATTRIBUTE_TIME_MODIFIED)->get_modification_date_time();
             }
         }
 
-        if (cache_ && cache_->get(src_, val) && val.image_mtime >= finfo->modification_time() && val.use_xmp == merge_xmp_ && val.xmp_mtime >= xmp_mtime) {
+        if (cache_ && cache_->get(src_, val) && val.image_mtime.compare(finfo->get_modification_date_time()) >= 0 && val.use_xmp == merge_xmp_ && val.xmp_mtime.compare(xmp_mtime) >=0 ) {
             image_ = val.image;
         } else {
             auto img = open_exiv2(src_, true);
@@ -175,7 +175,7 @@ void Exiv2Metadata::load() const
             }
             if (cache_) {
                 val.image = image_;
-                val.image_mtime = finfo->modification_time();
+                val.image_mtime = finfo->get_modification_date_time();
                 val.xmp_mtime = xmp_mtime;
                 val.use_xmp = merge_xmp_;
                 cache_->set(src_, val);
@@ -572,7 +572,7 @@ Exiv2::XmpData Exiv2Metadata::getXmpSidecar(const Glib::ustring &path)
 {
     Exiv2::XmpData ret;
     auto fname = xmpSidecarPath(path);
-    if (Glib::file_test(fname, Glib::FILE_TEST_EXISTS)) {
+    if (Glib::file_test(fname, Glib::FileTest::EXISTS)) {
         auto image = open_exiv2(fname, false);
         ret = image->xmpData();
     }

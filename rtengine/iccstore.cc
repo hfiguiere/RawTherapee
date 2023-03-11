@@ -80,7 +80,7 @@ void loadProfiles(
 
             const Glib::ustring filePath = Glib::build_filename(dirName, fileName);
 
-            if (!Glib::file_test(filePath, Glib::FILE_TEST_IS_REGULAR)) {
+            if (!Glib::file_test(filePath, Glib::FileTest::IS_REGULAR)) {
                 continue;
             }
 
@@ -107,7 +107,7 @@ void loadProfiles(
                 profileNames->emplace(name, filePath);
             }
         }
-    } catch (Glib::Exception&) {
+    } catch (Glib::Error&) {
     }
 }
 
@@ -141,7 +141,7 @@ bool loadProfile(
 
             const Glib::ustring filePath = Glib::build_filename(dirName, fileName);
 
-            if (!Glib::file_test(filePath, Glib::FILE_TEST_IS_REGULAR)) {
+            if (!Glib::file_test(filePath, Glib::FileTest::IS_REGULAR)) {
                 continue;
             }
 
@@ -162,7 +162,7 @@ bool loadProfile(
                 }
             }
         }
-    } catch (Glib::Exception&) {
+    } catch (Glib::Error&) {
     }
 
     return false;
@@ -781,7 +781,7 @@ private:
     {
         Glib::ustring fullpath = filename;
 
-        if (!Glib::path_is_absolute(fullpath)) {
+        if (!Glib::path_is_absolute(fullpath.c_str())) {
             fullpath = Glib::build_filename(path, filename);
         }
 

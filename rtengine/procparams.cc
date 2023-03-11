@@ -45,7 +45,7 @@ namespace
 
 Glib::ustring expandRelativePath(const Glib::ustring &procparams_fname, const Glib::ustring &prefix, Glib::ustring embedded_fname)
 {
-    if (embedded_fname.empty() || !Glib::path_is_absolute(procparams_fname)) {
+    if (embedded_fname.empty() || !Glib::path_is_absolute(procparams_fname.c_str())) {
         return embedded_fname;
     }
 
@@ -57,11 +57,11 @@ Glib::ustring expandRelativePath(const Glib::ustring &procparams_fname, const Gl
         embedded_fname = embedded_fname.substr(prefix.length());
     }
 
-    if (Glib::path_is_absolute(embedded_fname)) {
+    if (Glib::path_is_absolute(embedded_fname.c_str())) {
         return prefix + embedded_fname;
     }
 
-    Glib::ustring absPath = prefix + Glib::path_get_dirname(procparams_fname) + G_DIR_SEPARATOR_S + embedded_fname;
+    Glib::ustring absPath = prefix + Glib::path_get_dirname(procparams_fname.c_str()) + G_DIR_SEPARATOR_S + embedded_fname;
     return absPath;
 }
 
@@ -88,9 +88,9 @@ Glib::ustring expandRelativePath2(const Glib::ustring &procparams_fname, const G
 	// try to convert it using procparams_fname (the directory of the raw file) as prefix
 	Glib::ustring rPath = expandRelativePath(procparams_fname, prefix, embedded_fname);
 	if (rPath.length() >= prefix.length()
-		&& !Glib::file_test(rPath.substr(prefix.length()), Glib::FILE_TEST_IS_REGULAR)
+		&& !Glib::file_test(rPath.substr(prefix.length()), Glib::FileTest::IS_REGULAR)
 		&& !procparams_fname2.empty()
-		&& Glib::path_is_absolute(procparams_fname2)) {
+		&& Glib::path_is_absolute(procparams_fname2.c_str())) {
 		// embedded_fname is not a valid path;
 		// try with procparams_fname2 (the path defined in Preferences) as a prefix 
 		rPath = expandRelativePath(procparams_fname2 + G_DIR_SEPARATOR_S, prefix, embedded_fname);
@@ -101,7 +101,7 @@ Glib::ustring expandRelativePath2(const Glib::ustring &procparams_fname, const G
 
 Glib::ustring relativePathIfInside(const Glib::ustring &procparams_fname, bool fnameAbsolute, Glib::ustring embedded_fname)
 {
-    if (fnameAbsolute || embedded_fname.empty() || !Glib::path_is_absolute(procparams_fname)) {
+    if (fnameAbsolute || embedded_fname.empty() || !Glib::path_is_absolute(procparams_fname.c_str())) {
         return embedded_fname;
     }
 
@@ -112,12 +112,12 @@ Glib::ustring relativePathIfInside(const Glib::ustring &procparams_fname, bool f
         prefix = "file:";
     }
 
-    if (!Glib::path_is_absolute(embedded_fname)) {
+    if (!Glib::path_is_absolute(embedded_fname.c_str())) {
         return prefix + embedded_fname;
     }
 
-    Glib::ustring dir1 = Glib::path_get_dirname(procparams_fname) + G_DIR_SEPARATOR_S;
-    Glib::ustring dir2 = Glib::path_get_dirname(embedded_fname) + G_DIR_SEPARATOR_S;
+    Glib::ustring dir1 = Glib::path_get_dirname(procparams_fname.c_str()) + G_DIR_SEPARATOR_S;
+    Glib::ustring dir2 = Glib::path_get_dirname(embedded_fname.c_str()) + G_DIR_SEPARATOR_S;
 
     if (dir2.substr(0, dir1.length()) != dir1) {
         // it's in a different directory, ie not inside
@@ -133,10 +133,10 @@ Glib::ustring relativePathIfInside2(const Glib::ustring &procparams_fname, const
 	// (the directory of the raw file)
 	// (note: fnameAbsolute seems to be always true, so this will never return a relative path)
 	Glib::ustring rPath = relativePathIfInside(procparams_fname, fnameAbsolute, embedded_fname);
-	if ((Glib::path_is_absolute(rPath)
-		 ||	(rPath.length() >= 5 && rPath.substr(0, 5) == "file:" && Glib::path_is_absolute(rPath.substr(5))))
+	if ((Glib::path_is_absolute(rPath.c_str())
+		||	(rPath.length() >= 5 && rPath.substr(0, 5) == "file:" && Glib::path_is_absolute(rPath.substr(5).c_str())))
 		&& !procparams_fname2.empty()
-		&& Glib::path_is_absolute(procparams_fname2)) {
+		&& Glib::path_is_absolute(procparams_fname2.c_str())) {
 		// if path is not relative to the directory of the raw file,
 		// try to convert embedded_fname to a path relative to procparams_fname2
 		// (the path defined in Preferences)
@@ -350,8 +350,7 @@ void putToKeyfile(
     Glib::KeyFile& keyfile
 )
 {
-    const Glib::ArrayHandle<int> list = value;
-    keyfile.set_integer_list(group_name, key, list);
+    keyfile.set_integer_list(group_name, key, value);
 }
 
 void putToKeyfile(
@@ -361,8 +360,7 @@ void putToKeyfile(
     Glib::KeyFile& keyfile
 )
 {
-    const Glib::ArrayHandle<double> list = value;
-    keyfile.set_double_list(group_name, key, list);
+    keyfile.set_double_list(group_name, key, value);
 }
 
 void putToKeyfile(
@@ -372,7 +370,10 @@ void putToKeyfile(
     Glib::KeyFile& keyfile
 )
 {
-    const Glib::ArrayHandle<Glib::ustring> list = value;
+    std::vector<Glib::ustring> list;
+    for (const std::string &s : value) {
+        list.push_back(Glib::ustring(s));
+    }
     keyfile.set_string_list(group_name, key, list);
 }
 
@@ -6088,7 +6089,8 @@ int ProcParams::save(const Glib::ustring& fname, const Glib::ustring& fname2, bo
     Glib::ustring sPParams;
 
     try {
-        Glib::KeyFile keyFile;
+        Glib::RefPtr<Glib::KeyFile> pkeyfile = Glib::KeyFile::create();
+        Glib::KeyFile& keyFile = *pkeyfile;
 
 // Version
         keyFile.set_string("Version", "AppVersion", RTVERSION);
@@ -6183,17 +6185,17 @@ int ProcParams::save(const Glib::ustring& fname, const Glib::ustring& fname2, bo
         saveToKeyfile(!pedited || pedited->chmixer.enabled, "Channel Mixer", "Enabled", chmixer.enabled, keyFile);
 
         if (!pedited || pedited->chmixer.red[0] || pedited->chmixer.red[1] || pedited->chmixer.red[2]) {
-            Glib::ArrayHandle<int> rmix(chmixer.red, 3, Glib::OWNERSHIP_NONE);
+            std::vector<int> rmix = { chmixer.red[0], chmixer.red[1], chmixer.red[2] };
             keyFile.set_integer_list("Channel Mixer", "Red", rmix);
         }
 
         if (!pedited || pedited->chmixer.green[0] || pedited->chmixer.green[1] || pedited->chmixer.green[2]) {
-            Glib::ArrayHandle<int> gmix(chmixer.green, 3, Glib::OWNERSHIP_NONE);
+            std::vector<int> gmix = { chmixer.green[0], chmixer.green[1], chmixer.green[2] };
             keyFile.set_integer_list("Channel Mixer", "Green", gmix);
         }
 
         if (!pedited || pedited->chmixer.blue[0] || pedited->chmixer.blue[1] || pedited->chmixer.blue[2]) {
-            Glib::ArrayHandle<int> bmix(chmixer.blue, 3, Glib::OWNERSHIP_NONE);
+            std::vector<int> bmix = { chmixer.blue[0], chmixer.blue[1], chmixer.blue[2] };
             keyFile.set_integer_list("Channel Mixer", "Blue", bmix);
         }
 
@@ -7820,8 +7822,7 @@ int ProcParams::save(const Glib::ustring& fname, const Glib::ustring& fname2, bo
             for (auto &p : metadata.iptc) {
                 auto it = m.find(p.first);
                 if (it != m.end()) {
-                    Glib::ArrayHandle<Glib::ustring> values = p.second;
-                    keyFile.set_string_list("IPTC", it->second, values);
+                    keyFile.set_string_list("IPTC", it->second, p.second);
                 }
             }
         }
@@ -7855,7 +7856,8 @@ int ProcParams::load(const Glib::ustring& fname, ParamsEdited* pedited)
         return 1;
     }
 
-    Glib::KeyFile keyFile;
+    Glib::RefPtr<Glib::KeyFile> pkeyFile = Glib::KeyFile::create();
+    Glib::KeyFile& keyFile = *pkeyFile;
 
     try {
         std::unique_ptr<ParamsEdited> dummy_pedited;
@@ -7868,7 +7870,7 @@ int ProcParams::load(const Glib::ustring& fname, ParamsEdited* pedited)
             pedited = dummy_pedited.get();
         }
 
-        if (!Glib::file_test(fname, Glib::FILE_TEST_EXISTS) ||
+        if (!Glib::file_test(fname, Glib::FileTest::EXISTS) ||
                 !keyFile.load_from_file(fname)) {
             return 1;
         }
@@ -9608,15 +9610,15 @@ int ProcParams::load(const Glib::ustring& fname, ParamsEdited* pedited)
                 ss << "Spot" << (i++ + 1);
 
                 if (keyFile.has_key ("Spot removal", ss.str())) {
-                    Glib::ArrayHandle<double> entry = keyFile.get_double_list ("Spot removal", ss.str());
+                    std::vector<double> entry = keyFile.get_double_list ("Spot removal", ss.str());
                     const double epsilon = 0.001;  // to circumvent rounding of integer saved as double
                     SpotEntry se;
 
-                    se.sourcePos.set(int(entry.data()[0] + epsilon), int(entry.data()[1] + epsilon));
-                    se.targetPos.set(int(entry.data()[2] + epsilon), int(entry.data()[3] + epsilon));
-                    se.radius  = LIM<int>(int  (entry.data()[4] + epsilon), SpotParams::minRadius, SpotParams::maxRadius);
-                    se.feather = float(entry.data()[5]);
-                    se.opacity = float(entry.data()[6]);
+                    se.sourcePos.set(int(entry[0] + epsilon), int(entry[1] + epsilon));
+                    se.targetPos.set(int(entry[2] + epsilon), int(entry[3] + epsilon));
+                    se.radius  = LIM<int>(int  (entry[4] + epsilon), SpotParams::minRadius, SpotParams::maxRadius);
+                    se.feather = float(entry[5]);
+                    se.opacity = float(entry[6]);
                     spot.entries.push_back(se);
 
                     if (pedited) {
@@ -10754,7 +10756,7 @@ int ProcParams::load(const Glib::ustring& fname, ParamsEdited* pedited)
 
         return 0;
     } catch (const Glib::Error& e) {
-        printf("-->%s\n", e.what().c_str());
+        printf("-->%s\n", e.what());
         setDefaults();
         return 1;
     } catch (...) {

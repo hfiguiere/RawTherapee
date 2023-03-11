@@ -21,6 +21,7 @@
 #include <cstdio>
 #include <cstring>
 #include <functional>
+#include <deque>
 #include <glib/gstdio.h>
 #include <glibmm/fileutils.h>
 #include <glibmm/miscutils.h>
@@ -2169,19 +2170,19 @@ void DCPStore::init(const Glib::ustring& rt_profile_dir, bool loadAll)
         std::unique_ptr<Glib::Dir> dir;
 
         try {
-            if (!Glib::file_test(dirname, Glib::FILE_TEST_IS_DIR)) {
+            if (!Glib::file_test(dirname, Glib::FileTest::IS_DIR)) {
                 continue;
             }
 
             dir.reset(new Glib::Dir(dirname));
-        } catch (Glib::Exception& exception) {
+        } catch (Glib::Error& exception) {
             return;
         }
 
         for (const Glib::ustring& sname : *dir) {
             const Glib::ustring fname = Glib::build_filename(dirname, sname);
 
-            if (!Glib::file_test(fname, Glib::FILE_TEST_IS_DIR)) {
+            if (!Glib::file_test(fname, Glib::FileTest::IS_DIR)) {
                 // File
                 const auto lastdot = sname.rfind('.');
 
@@ -2211,7 +2212,7 @@ void DCPStore::init(const Glib::ustring& rt_profile_dir, bool loadAll)
 
 bool DCPStore::isValidDCPFileName(const Glib::ustring& filename)
 {
-    if (!Glib::file_test(filename, Glib::FILE_TEST_EXISTS) || Glib::file_test(filename, Glib::FILE_TEST_IS_DIR)) {
+    if (!Glib::file_test(filename, Glib::FileTest::EXISTS) || Glib::file_test(filename, Glib::FileTest::IS_DIR)) {
         return false;
     }
 
@@ -2261,7 +2262,7 @@ DCPProfile* DCPStore::getStdProfile(const Glib::ustring& requested_cam_short_nam
         if (!dir.empty()) {
             const Glib::ustring fname = Glib::build_filename(dir, requested_cam_short_name + Glib::ustring(".dcp"));
 
-            if (Glib::file_test(fname, Glib::FILE_TEST_EXISTS)) {
+            if (Glib::file_test(fname, Glib::FileTest::EXISTS)) {
                 return getProfile(fname);
             }
         }

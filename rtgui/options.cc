@@ -28,7 +28,9 @@
 #include <sstream>
 #include "multilangmgr.h"
 #include "addsetids.h"
+#ifndef NPC_NOGUI
 #include "guiutils.h"
+#endif
 #include "pathutils.h"
 #include "version.h"
 
@@ -50,6 +52,8 @@
 #endif
 #include <Shlobj.h>
 #endif
+
+Glib::ustring argv0;
 
 // User's settings directory, including images' profiles if used
 Glib::ustring Options::rtdir;
@@ -77,18 +81,18 @@ inline bool Options::checkProfilePath(Glib::ustring &path)
 
     Glib::ustring p = getUserProfilePath();
 
-    if (!p.empty() && Glib::file_test(path + paramFileExtension, Glib::FILE_TEST_EXISTS)) {
+    if (!p.empty() && Glib::file_test(path + paramFileExtension, Glib::FileTest::EXISTS)) {
         return true;
     }
 
     p = getGlobalProfilePath();
 
-    return !p.empty() && Glib::file_test(path + paramFileExtension, Glib::FILE_TEST_EXISTS);
+    return !p.empty() && Glib::file_test(path + paramFileExtension, Glib::FileTest::EXISTS);
 }
 
 bool Options::checkDirPath(Glib::ustring &path, Glib::ustring errString)
 {
-    if (Glib::file_test(path, Glib::FILE_TEST_EXISTS) && Glib::file_test(path, Glib::FILE_TEST_IS_DIR)) {
+    if (Glib::file_test(path, Glib::FileTest::EXISTS) && Glib::file_test(path, Glib::FileTest::IS_DIR)) {
         return true;
     } else {
         if (!errString.empty()) {
@@ -107,7 +111,7 @@ void Options::updatePaths()
     userProfilePath = "";
     globalProfilePath = "";
 
-    if (Glib::path_is_absolute(profilePath)) {
+    if (Glib::path_is_absolute(profilePath.c_str())) {
         // absolute path
         if (!checkDirPath(profilePath, "")) {
             g_mkdir_with_parents(profilePath.c_str(), 511);
@@ -161,59 +165,59 @@ void Options::updatePaths()
     Glib::ustring preferredPath = getPreferredProfilePath();
 
     // Paths are updated only if the user or global profile path is set
-    if (lastRgbCurvesDir.empty() || !Glib::file_test(lastRgbCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastRgbCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastRgbCurvesDir.empty() || !Glib::file_test(lastRgbCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastRgbCurvesDir, Glib::FileTest::IS_DIR)) {
         lastRgbCurvesDir = preferredPath;
     }
 
-    if (lastLabCurvesDir.empty() || !Glib::file_test(lastLabCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastLabCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastLabCurvesDir.empty() || !Glib::file_test(lastLabCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastLabCurvesDir, Glib::FileTest::IS_DIR)) {
         lastLabCurvesDir = preferredPath;
     }
 
-    if (lastRetinexDir.empty() || !Glib::file_test(lastRetinexDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastLabCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastRetinexDir.empty() || !Glib::file_test(lastRetinexDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastLabCurvesDir, Glib::FileTest::IS_DIR)) {
         lastRetinexDir = preferredPath;
     }
 
-    if (lastDenoiseCurvesDir.empty() || !Glib::file_test(lastDenoiseCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastDenoiseCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastDenoiseCurvesDir.empty() || !Glib::file_test(lastDenoiseCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastDenoiseCurvesDir, Glib::FileTest::IS_DIR)) {
         lastDenoiseCurvesDir = preferredPath;
     }
 
-    if (lastWaveletCurvesDir.empty() || !Glib::file_test(lastWaveletCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastWaveletCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastWaveletCurvesDir.empty() || !Glib::file_test(lastWaveletCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastWaveletCurvesDir, Glib::FileTest::IS_DIR)) {
         lastWaveletCurvesDir = preferredPath;
     }
 
-    if (lastlocalCurvesDir.empty() || !Glib::file_test(lastlocalCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastlocalCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastlocalCurvesDir.empty() || !Glib::file_test(lastlocalCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastlocalCurvesDir, Glib::FileTest::IS_DIR)) {
         lastlocalCurvesDir = preferredPath;
     }
 
-    if (lastPFCurvesDir.empty() || !Glib::file_test(lastPFCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastPFCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastPFCurvesDir.empty() || !Glib::file_test(lastPFCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastPFCurvesDir, Glib::FileTest::IS_DIR)) {
         lastPFCurvesDir = preferredPath;
     }
 
-    if (lastHsvCurvesDir.empty() || !Glib::file_test(lastHsvCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastHsvCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastHsvCurvesDir.empty() || !Glib::file_test(lastHsvCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastHsvCurvesDir, Glib::FileTest::IS_DIR)) {
         lastHsvCurvesDir = preferredPath;
     }
 
-    if (lastToneCurvesDir.empty() || !Glib::file_test(lastToneCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastToneCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastToneCurvesDir.empty() || !Glib::file_test(lastToneCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastToneCurvesDir, Glib::FileTest::IS_DIR)) {
         lastToneCurvesDir = preferredPath;
     }
 
-    if (lastProfilingReferenceDir.empty() || !Glib::file_test(lastProfilingReferenceDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastProfilingReferenceDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastProfilingReferenceDir.empty() || !Glib::file_test(lastProfilingReferenceDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastProfilingReferenceDir, Glib::FileTest::IS_DIR)) {
         lastProfilingReferenceDir = preferredPath;
     }
 
-    if (lastVibranceCurvesDir.empty() || !Glib::file_test(lastVibranceCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastVibranceCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastVibranceCurvesDir.empty() || !Glib::file_test(lastVibranceCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastVibranceCurvesDir, Glib::FileTest::IS_DIR)) {
         lastVibranceCurvesDir = preferredPath;
     }
 
-    if (loadSaveProfilePath.empty() || !Glib::file_test(loadSaveProfilePath, Glib::FILE_TEST_EXISTS) || !Glib::file_test(loadSaveProfilePath, Glib::FILE_TEST_IS_DIR)) {
+    if (loadSaveProfilePath.empty() || !Glib::file_test(loadSaveProfilePath, Glib::FileTest::EXISTS) || !Glib::file_test(loadSaveProfilePath, Glib::FileTest::IS_DIR)) {
         loadSaveProfilePath = preferredPath;
     }
 
-    if (lastBWCurvesDir.empty() || !Glib::file_test(lastBWCurvesDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastBWCurvesDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastBWCurvesDir.empty() || !Glib::file_test(lastBWCurvesDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastBWCurvesDir, Glib::FileTest::IS_DIR)) {
         lastBWCurvesDir = preferredPath;
     }
 
-    if (lastICCProfCreatorDir.empty() || !Glib::file_test(lastICCProfCreatorDir, Glib::FILE_TEST_EXISTS) || !Glib::file_test(lastICCProfCreatorDir, Glib::FILE_TEST_IS_DIR)) {
+    if (lastICCProfCreatorDir.empty() || !Glib::file_test(lastICCProfCreatorDir, Glib::FileTest::EXISTS) || !Glib::file_test(lastICCProfCreatorDir, Glib::FileTest::IS_DIR)) {
         lastICCProfCreatorDir = preferredPath;
     }
 }
@@ -257,34 +261,34 @@ Glib::ustring Options::findProfilePath(Glib::ustring &profName)
         p = getUserProfilePath();
         Glib::ustring fullPath = Glib::build_filename(p, profName.substr(5) + paramFileExtension);
 
-        if (!p.empty() && Glib::file_test(fullPath, Glib::FILE_TEST_EXISTS)) {
-            return Glib::path_get_dirname(fullPath);
+        if (!p.empty() && Glib::file_test(fullPath, Glib::FileTest::EXISTS)) {
+            return Glib::path_get_dirname(fullPath.c_str());
         }
     } else if (p == "${G}") {
         // the path starts by the User virtual path
         p = getGlobalProfilePath();
         Glib::ustring fullPath = Glib::build_filename(p, profName.substr(5) + paramFileExtension);
 
-        if (!p.empty() && Glib::file_test(fullPath, Glib::FILE_TEST_EXISTS)) {
-            return Glib::path_get_dirname(fullPath);
+        if (!p.empty() && Glib::file_test(fullPath, Glib::FileTest::EXISTS)) {
+            return Glib::path_get_dirname(fullPath.c_str());
         }
     } else {
         // compatibility case -> convert the path to the new format
         p = getUserProfilePath();
         Glib::ustring fullPath = Glib::build_filename(p, profName + paramFileExtension);
 
-        if (!p.empty() && Glib::file_test(fullPath, Glib::FILE_TEST_EXISTS)) {
+        if (!p.empty() && Glib::file_test(fullPath, Glib::FileTest::EXISTS)) {
             // update the profile path
             profName = Glib::build_filename("${U}", profName);
-            return Glib::path_get_dirname(fullPath);
+            return Glib::path_get_dirname(fullPath.c_str());
         }
 
         p = getGlobalProfilePath();
         fullPath = Glib::build_filename(p, profName + paramFileExtension);
 
-        if (!p.empty() && Glib::file_test(fullPath, Glib::FILE_TEST_EXISTS)) {
+        if (!p.empty() && Glib::file_test(fullPath, Glib::FileTest::EXISTS)) {
             profName = Glib::build_filename("${G}", profName);
-            return Glib::path_get_dirname(fullPath);
+            return Glib::path_get_dirname(fullPath.c_str());
         }
     }
 
@@ -344,7 +348,7 @@ void Options::setDefaults()
     detailWindowHeight = -1;
     dirBrowserWidth = 260;
     dirBrowserHeight = 350;
-    dirBrowserSortType = Gtk::SORT_ASCENDING;
+    dirBrowserSortType = Gtk::SortType::ASCENDING;
     preferencesWidth = 800;
     preferencesHeight = 600;
     toolPanelWidth = 400;
@@ -724,9 +728,10 @@ void Options::readFromFile(Glib::ustring fname)
 {
     setlocale(LC_NUMERIC, "C");  // to set decimal point to "."
 
-    Glib::KeyFile keyFile;
+    Glib::RefPtr<Glib::KeyFile> pkeyFile = Glib::KeyFile::create();
+    Glib::KeyFile& keyFile = *pkeyFile;
 
-    if (!Glib::file_test(fname, Glib::FILE_TEST_EXISTS)) {
+    if (!Glib::file_test(fname, Glib::FileTest::EXISTS)) {
         Glib::ustring msg = Glib::ustring::compose("Options file %1 does not exist", fname);
         throw Error(msg);
     }
@@ -2329,7 +2334,8 @@ void Options::saveToFile(Glib::ustring fname)
 
     try {
 
-        Glib::KeyFile keyFile;
+        Glib::RefPtr<Glib::KeyFile> pkeyFile = Glib::KeyFile::create();
+        Glib::KeyFile& keyFile = *pkeyFile;
 
         keyFile.set_boolean("General", "TabbedEditor", tabbedUI);
         keyFile.set_boolean("General", "StoreLastProfile", savesParamsAtExit);
@@ -2409,19 +2415,14 @@ void Options::saveToFile(Glib::ustring fname)
         keyFile.set_integer("File Browser", "MaxPreviewHeight", maxThumbnailHeight);
         keyFile.set_integer("File Browser", "MaxPreviewWidth", maxThumbnailWidth);
         keyFile.set_integer("File Browser", "MaxCacheEntries", maxCacheEntries);
-        Glib::ArrayHandle<Glib::ustring> pext = parseExtensions;
-        keyFile.set_string_list("File Browser", "ParseExtensions", pext);
-        Glib::ArrayHandle<int> pextena = parseExtensionsEnabled;
-        keyFile.set_integer_list("File Browser", "ParseExtensionsEnabled", pextena);
+        keyFile.set_string_list("File Browser", "ParseExtensions", parseExtensions);
+        keyFile.set_integer_list("File Browser", "ParseExtensionsEnabled", parseExtensionsEnabled);
         keyFile.set_integer("File Browser", "ThumbnailArrangement", fbArrangement);
         keyFile.set_integer("File Browser", "ThumbnailInterpolation", thumbInterp);
-        Glib::ArrayHandle<Glib::ustring> pfav = favoriteDirs;
-        keyFile.set_string_list("File Browser", "FavoriteDirs", pfav);
-        Glib::ArrayHandle<Glib::ustring> pren = renameTemplates;
-        keyFile.set_string_list("File Browser", "RenameTemplates", pren);
+        keyFile.set_string_list("File Browser", "FavoriteDirs", favoriteDirs);
+        keyFile.set_string_list("File Browser", "RenameTemplates", renameTemplates);
         keyFile.set_boolean("File Browser", "RenameUseTemplates", renameUseTemplates);
-        Glib::ArrayHandle<double> ptzoom = thumbnailZoomRatios;
-        keyFile.set_double_list("File Browser", "ThumbnailZoomRatios", ptzoom);
+        keyFile.set_double_list("File Browser", "ThumbnailZoomRatios", thumbnailZoomRatios);
         keyFile.set_boolean("File Browser", "OverlayedFileNames", overlayedFileNames);
         keyFile.set_boolean("File Browser", "FilmStripOverlayedFileNames", filmStripOverlayedFileNames);
         keyFile.set_boolean("File Browser", "ShowFileNames", showFileNames);
@@ -2504,8 +2505,7 @@ void Options::saveToFile(Glib::ustring fname)
         keyFile.set_string("Profiles", "CustomProfileBuilderPath", CPBPath);
         keyFile.set_integer("Profiles", "CustomProfileBuilderKeys", CPBKeys);
 
-        Glib::ArrayHandle<Glib::ustring> ahfavorites = favorites;
-        keyFile.set_string_list("GUI", "Favorites", ahfavorites);
+        keyFile.set_string_list("GUI", "Favorites", favorites);
         keyFile.set_boolean("GUI", "FavoritesCloneTools", cloneFavoriteTools);
         keyFile.set_integer("GUI", "WindowWidth", windowWidth);
         keyFile.set_integer("GUI", "WindowHeight", windowHeight);
@@ -2523,7 +2523,7 @@ void Options::saveToFile(Glib::ustring fname)
         keyFile.set_integer("GUI", "DetailWindowHeight", detailWindowHeight);
         keyFile.set_integer("GUI", "DirBrowserWidth", dirBrowserWidth);
         keyFile.set_integer("GUI", "DirBrowserHeight", dirBrowserHeight);
-        keyFile.set_integer("GUI", "SortType", dirBrowserSortType);
+        keyFile.set_integer("GUI", "SortType", int(dirBrowserSortType));
         keyFile.set_integer("GUI", "PreferencesWidth", preferencesWidth);
         keyFile.set_integer("GUI", "PreferencesHeight", preferencesHeight);
         keyFile.set_integer("GUI", "SaveAsDialogWidth", saveAsDialogWidth);
@@ -2553,8 +2553,7 @@ void Options::saveToFile(Glib::ustring fname)
         keyFile.set_boolean("GUI", "ShowClippedShadows", showClippedShadows);
         keyFile.set_integer("GUI", "FrameColor", bgcolor);
         keyFile.set_boolean("GUI", "ProcessingQueueEnbled", procQueueEnabled);
-        Glib::ArrayHandle<int> tpopen = tpOpen;
-        keyFile.set_integer_list("GUI", "ToolPanelsExpanded", tpopen);
+        keyFile.set_integer_list("GUI", "ToolPanelsExpanded", tpOpen);
         keyFile.set_boolean("GUI", "ToolPanelsExpandedAutoSave", autoSaveTpOpen);
         keyFile.set_integer("GUI", "MultiDisplayMode", multiDisplayMode);
         keyFile.set_double_list("GUI", "CutOverlayBrush", cutOverlayBrush);
@@ -2662,8 +2661,7 @@ void Options::saveToFile(Glib::ustring fname)
         keyFile.set_boolean("ICC Profile Creator", "AppendParamsToDesc", ICCPC_appendParamsToDesc);
 
 
-        Glib::ArrayHandle<int> bab = baBehav;
-        keyFile.set_integer_list("Batch Processing", "AdjusterBehavior", bab);
+        keyFile.set_integer_list("Batch Processing", "AdjusterBehavior", baBehav);
 
         keyFile.set_boolean("Sounds", "Enable", sndEnable);
         keyFile.set_string("Sounds", "BatchQueueDone", sndBatchQueueDone);
@@ -2782,7 +2780,7 @@ void Options::load(bool lightweight)
     if (path != nullptr) {
         rtdir = Glib::ustring(path);
 
-        if (!Glib::path_is_absolute(rtdir)) {
+        if (!Glib::path_is_absolute(path)) {
             Glib::ustring msg = Glib::ustring::compose("Settings path %1 is not absolute", rtdir);
             throw Error(msg);
         }
@@ -2830,7 +2828,7 @@ void Options::load(bool lightweight)
     if (path != nullptr) {
         cacheBaseDir = Glib::ustring(path);
 
-        if (!Glib::path_is_absolute(cacheBaseDir)) {
+        if (!Glib::path_is_absolute(path)) {
             Glib::ustring msg = Glib::ustring::compose("Cache base dir %1 is not absolute", cacheBaseDir);
             throw Error(msg);
         }
