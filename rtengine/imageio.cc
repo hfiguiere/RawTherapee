@@ -30,7 +30,7 @@
 #include "procparams.h"
 #include "utils.h"
 #include "../rtgui/options.h"
-#include "../rtgui/version.h"
+#include "version.h"
 #include "../rtexif/rtexif.h"
 
 #ifdef WIN32

@@ -36,7 +36,7 @@
 #include "../rtengine/procparams.h"
 
 #include "../rtgui/cacheimagedata.h"
-#include "../rtgui/version.h"
+#include "version.h"
 #include "../rtgui/ppversion.h"
 
 // see end of ExifManager::parse(bool, bool)
