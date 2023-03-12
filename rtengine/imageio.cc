@@ -53,7 +53,7 @@
 #include "utils.h"
 
 #include "../rtgui/options.h"
-#include "../rtgui/version.h"
+#include "version.h"
 
 
 using namespace std;
