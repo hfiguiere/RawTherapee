@@ -1828,7 +1828,7 @@ void DCPStore::init(const Glib::ustring& rt_profile_dir, bool loadAll)
             const Glib::ustring fname = Glib::build_filename(dirname, sname);
 
 #ifdef GLIBMM_268
-            if (!Glib::file_test(dirname, Glib::FileTest::IS_DIR)) {
+            if (!Glib::file_test(fname, Glib::FileTest::IS_DIR)) {
 #else
             if (!Glib::file_test(fname, Glib::FILE_TEST_IS_DIR)) {
 #endif
