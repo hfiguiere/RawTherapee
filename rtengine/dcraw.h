@@ -21,7 +21,7 @@
 
 #include "myfile.h"
 #include <csetjmp>
-
+#include <cstdint>
 
 class DCraw
 {
