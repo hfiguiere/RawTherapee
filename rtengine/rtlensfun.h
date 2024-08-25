@@ -24,9 +24,10 @@
 #include <set>
 #include <vector>
 
-#include <glibmm/ustring.h>
-
 #include <lensfun.h>
+#undef DEPRECATED
+
+#include <glibmm/ustring.h>
 
 #include "lcp.h"
 #include "noncopyable.h"

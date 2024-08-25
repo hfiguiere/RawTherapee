@@ -598,7 +598,7 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, b
             // not have any.
             const std::regex pattern("\\s*-\\s*");
             const auto formatted_name = std::regex_replace(name.raw(), pattern, "-");
-            if (name != formatted_name) {
+            if (name != Glib::ustring(formatted_name)) {
                 found = find_lens_from_name(data_, camera.data_, formatted_name);
             }
         }

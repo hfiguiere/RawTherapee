@@ -342,6 +342,7 @@ public:
 class HistogramObservable
 {
 public:
+    virtual ~HistogramObservable() = default;
     /** Tells the observable to update the histogram data. */
     virtual void requestUpdateHistogram() = 0;
     /** Tells the observable to update the raw histogram data. */

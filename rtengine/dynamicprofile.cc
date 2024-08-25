@@ -54,7 +54,8 @@ bool DynamicProfileRule::Optional::operator() (const Glib::ustring &val) const
 
     if (value.find ("re:") == 0) {
         // this is a regexp
-        return Glib::Regex::match_simple (value.substr (3), val, Glib::REGEX_CASELESS);
+        return Glib::Regex::match_simple (value.substr (3), val,
+                                          Glib::Regex::CompileFlags::CASELESS);
     } else {
         // normal string comparison
         return value.casefold() == val.casefold();
@@ -174,11 +175,12 @@ void set_optional (Glib::KeyFile &kf, const Glib::ustring &group,
 bool DynamicProfileRules::loadRules()
 {
     dynamicRules.clear();
-    Glib::KeyFile kf;
+    Glib::RefPtr<Glib::KeyFile> pkf = Glib::KeyFile::create();
+    Glib::KeyFile& kf = *pkf;
     const Glib::ustring fileName = Glib::build_filename (Options::rtdir, "dynamicprofile.cfg");
 
     try {
-        if (!(Glib::file_test(fileName, Glib::FILE_TEST_EXISTS) && kf.load_from_file (fileName))) {
+        if (!(Glib::file_test(fileName, Glib::FileTest::EXISTS) && kf.load_from_file (fileName))) {
             return false;
         }
     } catch (Glib::Error &e) {
@@ -255,7 +257,8 @@ bool DynamicProfileRules::storeRules()
         printf ("saving dynamic profiles...\n");
     }
 
-    Glib::KeyFile kf;
+    Glib::RefPtr<Glib::KeyFile> pkf = Glib::KeyFile::create();
+    Glib::KeyFile& kf = *pkf;
 
     for (auto &rule : dynamicRules) {
         std::ostringstream buf;
@@ -274,7 +277,7 @@ bool DynamicProfileRules::storeRules()
     }
 
 	std::string fn = Glib::build_filename (Options::rtdir, "dynamicprofile.cfg");
-	if (Glib::file_test(fn, Glib::FILE_TEST_IS_SYMLINK)) {
+	if (Glib::file_test(fn, Glib::FileTest::IS_SYMLINK)) {
 		// file is symlink; use target instead
 		// symlinks apparently are not recognízed on Windows
 		return kf.save_to_file (g_file_read_link (fn.c_str(), NULL));

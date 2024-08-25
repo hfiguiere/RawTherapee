@@ -344,7 +344,7 @@ void rtengine::DFManager::Implementation::init(const Glib::ustring& pathname)
             names.emplace_back(Glib::build_filename(pathname, file->get_name()));
         }
 
-    } catch (Glib::Exception&) {}
+    } catch (Glib::Error&) {}
 
     dfList.clear();
     bpList.clear();
@@ -548,7 +548,7 @@ dfInfo* rtengine::DFManager::Implementation::addFileInfo(const Glib::ustring& fi
 
         auto info = file->query_info("standard::name,standard::type,standard::is-hidden");
 
-        if (!info || info->get_file_type() == Gio::FILE_TYPE_DIRECTORY) {
+        if (!info || info->get_file_type() == Gio::FileType::DIRECTORY) {
             return nullptr;
         }
 
