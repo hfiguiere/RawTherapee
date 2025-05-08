@@ -665,7 +665,7 @@ LFLens LFDatabase::findLens(const LFCamera &camera, const Glib::ustring &name, b
             // Some names have white-space around the dash(s) while Lensfun does
             // not have any.
             const auto formatted_name = trimDashWhitespace(name.raw());
-            if (name != formatted_name) {
+            if (name != formatted_name.c_str()) {
                 found = find_lens_from_name(data_, camera.data_, formatted_name);
             }
         }

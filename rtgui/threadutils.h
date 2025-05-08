@@ -29,10 +29,18 @@
 #include <condition_variable>
 #include "rtengine/noncopyable.h"
 
+#ifdef USE_STD_MUTEX
 #if STRICT_MUTEX && NDEBUG
 using MyMutexBase = std::mutex;
 #else
 using MyMutexBase = std::recursive_mutex;
+#endif
+#else
+#if STRICT_MUTEX && NDEBUG
+using MyMutexBase = std::mutex;
+#else
+using MyMutexBase = std::recursive_mutex;
+#endif
 #endif
 
 /**
@@ -211,7 +219,11 @@ inline void MyMutex::MyLock::acquire ()
 }
 inline bool MyMutex::MyLock::try_acquire ()
 {
+#ifdef USE_STD_MUTEX
+    return locked = mutex.try_lock ();
+#else
     return locked = mutex.trylock ();
+#endif
 }
 
 inline void MyMutex::MyLock::release ()

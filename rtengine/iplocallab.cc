@@ -41,7 +41,9 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#ifndef NPC_NOGUI
 #include "rtgui/thresholdselector.h"
+#endif
 #include "imagesource.h"
 
 #include "cplx_wavelet_dec.h"

@@ -18,7 +18,11 @@
  */
 #include <fstream>
 
+#ifdef USE_STD_MUTEX
+#include <thread>
+#else
 #include <glibmm/thread.h>
+#endif
 
 #include "improccoordinator.h"
 
@@ -3220,8 +3224,13 @@ void ImProcCoordinator::startProcessing()
 
             //batchThread->yield(); //the running batch should wait other threads to avoid conflict
 
+#ifdef USE_STD_MUTEX
+            thread = new std::thread{[this] {
+              this->ImProcCoordinator::process();
+            }};
+#else
             thread = Glib::Thread::create(sigc::mem_fun(*this, &ImProcCoordinator::process), 0, true, true, Glib::THREAD_PRIORITY_NORMAL);
-
+#endif
         }
     }
 }
