@@ -2234,8 +2234,6 @@ struct ColorManagementParams {
     static const Glib::ustring NoICMString;
     static const Glib::ustring NoProfileString;
 
-    static const ColorManagementParams& getDefault();
-
     ColorManagementParams();
 
     bool operator ==(const ColorManagementParams& other) const;
