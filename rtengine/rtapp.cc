@@ -22,7 +22,7 @@
 #include "rtengine/procparams.h"
 #include "rtengine/settings.h"
 #include "rtgui/options.h"
-#include "rtgui/version.h"
+#include "version.h"
 
 using namespace rtengine;
 
