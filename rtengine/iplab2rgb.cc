@@ -31,7 +31,7 @@
 #include "settings.h"
 #include "utils.h"
 #include <fmt/format.h>
-#include "rtgui/labgrid.h"
+#include "labgrid.h"
 
 namespace rtengine
 {
