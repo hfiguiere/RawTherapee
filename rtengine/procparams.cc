@@ -41,7 +41,7 @@
 #include "rtgui/options.h"
 #include "rtgui/paramsedited.h"
 #include "rtgui/ppversion.h"
-#include "rtgui/version.h"
+#include "version.h"
 
 using namespace std;
 
