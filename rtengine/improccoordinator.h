@@ -31,10 +31,12 @@
 
 #include "rtgui/threadutils.h"
 
+#ifndef USE_STD_MUTEX
 namespace Glib
 {
 class Thread;
 }
+#endif
 
 namespace rtengine
 {
@@ -246,7 +248,11 @@ protected:
     bool lastOutputBPC;
 
     // members of the updater:
+#ifdef USE_STD_MUTEX
+    std::thread* thread;
+#else
     Glib::Thread* thread;
+#endif
     MyMutex updaterThreadStart;
     MyMutex paramsUpdateMutex;
     int  changeSinceLast;

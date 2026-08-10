@@ -17,8 +17,13 @@
  *  along with RawTherapee.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <glibmm/thread.h>
+#ifdef USE_STD_MUTEX
+# include <thread>
+#else
+# include <glibmm/thread.h>
+#endif
 #include <glibmm/ustring.h>
+#include <glibmm/error.h>
 
 #include "cieimage.h"
 #include "clutstore.h"
@@ -2458,7 +2463,7 @@ void batchProcessingThread(ProcessingJob* job, BatchProcessingListener* bpl)
         } else {
             try {
                 currentJob = bpl->imageReady(img);
-            } catch (Glib::Exception& ex) {
+            } catch (Glib::Error& ex) {
                 bpl->error(ex.what());
                 currentJob = nullptr;
             }
@@ -2470,7 +2475,13 @@ void startBatchProcessing(ProcessingJob* job, BatchProcessingListener* bpl)
 {
 
     if (bpl) {
+#ifdef USE_STD_MUTEX
+        std::thread t{[job, bpl] {
+            batchProcessingThread(job, bpl);
+        }};
+#else
         Glib::Thread::create(sigc::bind(sigc::ptr_fun(batchProcessingThread), job, bpl), 0, true, true, Glib::THREAD_PRIORITY_LOW);
+#endif
     }
 
 }

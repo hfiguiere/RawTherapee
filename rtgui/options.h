@@ -20,6 +20,7 @@
 
 #include <set>
 #include <vector>
+#ifndef NPC_NOGUI
 #if defined __has_include
 #if __has_include(<gtkmm/enums.h>)
 #include <gtkmm/enums.h>
@@ -29,9 +30,19 @@
 #else
 #include <gtkmm/enums.h>
 #endif
+#endif
 #include "rtengine/rtapp.h"
 #include "rtengine/settings.h"
 #include <exception>
+
+#ifdef NPC_NOGUI
+namespace Gtk {
+  enum class SortType : int32_t {
+    ASCENDING = 0,
+    DESCENDING = 1
+  };
+}
+#endif
 
 #define STARTUPDIR_CURRENT 0
 #define STARTUPDIR_HOME    1

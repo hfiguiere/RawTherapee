@@ -21,7 +21,6 @@
 
 #include "rtengine/curves.h"
 
-#include <glibmm/arrayhandle.h>
 #include <glibmm/keyfile.h>
 #include <glibmm/ustring.h>
 
@@ -237,8 +236,7 @@ inline void putToKeyfile(
     Glib::KeyFile& keyfile
 )
 {
-    const Glib::ArrayHandle<int> list = value;
-    keyfile.set_integer_list(group_name, key, list);
+    keyfile.set_integer_list(group_name, key, value);
 }
 
 inline void putToKeyfile(
@@ -248,8 +246,7 @@ inline void putToKeyfile(
     Glib::KeyFile& keyfile
 )
 {
-    const Glib::ArrayHandle<double> list = value;
-    keyfile.set_double_list(group_name, key, list);
+    keyfile.set_double_list(group_name, key, value);
 }
 
 inline void putToKeyfile(
@@ -259,7 +256,10 @@ inline void putToKeyfile(
     Glib::KeyFile& keyfile
 )
 {
-    const Glib::ArrayHandle<Glib::ustring> list = value;
+    std::vector<Glib::ustring> list;
+    for (const std::string &s : value) {
+        list.push_back(Glib::ustring(s));
+    }
     keyfile.set_string_list(group_name, key, list);
 }
 

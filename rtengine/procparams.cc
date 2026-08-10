@@ -4078,7 +4078,8 @@ int ProcParams::save(const Glib::ustring& fname, const Glib::ustring& fname2, bo
     Glib::ustring sPParams;
 
     try {
-        Glib::KeyFile keyFile;
+        Glib::RefPtr<Glib::KeyFile> pkeyfile = Glib::KeyFile::create();
+        Glib::KeyFile& keyFile = *pkeyfile;
 
 // Version
         keyFile.set_string("Version", "AppVersion", RTVERSION);
@@ -4173,17 +4174,17 @@ int ProcParams::save(const Glib::ustring& fname, const Glib::ustring& fname2, bo
         saveToKeyfile(!pedited || pedited->chmixer.enabled, "Channel Mixer", "Enabled", chmixer.enabled, keyFile);
 
         if (!pedited || pedited->chmixer.red[0] || pedited->chmixer.red[1] || pedited->chmixer.red[2]) {
-            Glib::ArrayHandle<int> rmix(chmixer.red, 3, Glib::OWNERSHIP_NONE);
+            std::vector<int> rmix = { chmixer.red[0], chmixer.red[1], chmixer.red[2] };
             keyFile.set_integer_list("Channel Mixer", "Red", rmix);
         }
 
         if (!pedited || pedited->chmixer.green[0] || pedited->chmixer.green[1] || pedited->chmixer.green[2]) {
-            Glib::ArrayHandle<int> gmix(chmixer.green, 3, Glib::OWNERSHIP_NONE);
+            std::vector<int> gmix = { chmixer.green[0], chmixer.green[1], chmixer.green[2] };
             keyFile.set_integer_list("Channel Mixer", "Green", gmix);
         }
 
         if (!pedited || pedited->chmixer.blue[0] || pedited->chmixer.blue[1] || pedited->chmixer.blue[2]) {
-            Glib::ArrayHandle<int> bmix(chmixer.blue, 3, Glib::OWNERSHIP_NONE);
+            std::vector<int> bmix = { chmixer.blue[0], chmixer.blue[1], chmixer.blue[2] };
             keyFile.set_integer_list("Channel Mixer", "Blue", bmix);
         }
 
@@ -5165,8 +5166,7 @@ int ProcParams::save(const Glib::ustring& fname, const Glib::ustring& fname2, bo
             for (auto &p : metadata.iptc) {
                 auto it = m.find(p.first);
                 if (it != m.end()) {
-                    Glib::ArrayHandle<Glib::ustring> values = p.second;
-                    keyFile.set_string_list("IPTC", it->second, values);
+                    keyFile.set_string_list("IPTC", it->second, p.second);
                 }
             }
         }
@@ -5202,7 +5202,8 @@ int ProcParams::load(const Glib::ustring& fname, ParamsEdited* pedited)
 
     const auto& options = App::get().options();
 
-    Glib::KeyFile keyFile;
+    Glib::RefPtr<Glib::KeyFile> pkeyFile = Glib::KeyFile::create();
+    Glib::KeyFile& keyFile = *pkeyFile;
 
     try {
         std::unique_ptr<ParamsEdited> dummy_pedited;
@@ -5215,7 +5216,7 @@ int ProcParams::load(const Glib::ustring& fname, ParamsEdited* pedited)
             pedited = dummy_pedited.get();
         }
 
-        if (!Glib::file_test(fname, Glib::FILE_TEST_EXISTS) ||
+        if (!Glib::file_test(fname, Glib::FileTest::EXISTS) ||
                 !keyFile.load_from_file(fname)) {
             return 1;
         }
@@ -6128,15 +6129,15 @@ int ProcParams::load(const Glib::ustring& fname, ParamsEdited* pedited)
                 ss << "Spot" << (i++ + 1);
 
                 if (keyFile.has_key ("Spot removal", ss.str())) {
-                    Glib::ArrayHandle<double> entry = keyFile.get_double_list ("Spot removal", ss.str());
+                    std::vector<double> entry = keyFile.get_double_list ("Spot removal", ss.str());
                     const double epsilon = 0.001;  // to circumvent rounding of integer saved as double
                     SpotEntry se;
 
-                    se.sourcePos.set(int(entry.data()[0] + epsilon), int(entry.data()[1] + epsilon));
-                    se.targetPos.set(int(entry.data()[2] + epsilon), int(entry.data()[3] + epsilon));
-                    se.radius  = LIM<int>(int  (entry.data()[4] + epsilon), SpotParams::minRadius, SpotParams::maxRadius);
-                    se.feather = float(entry.data()[5]);
-                    se.opacity = float(entry.data()[6]);
+                    se.sourcePos.set(int(entry[0] + epsilon), int(entry[1] + epsilon));
+                    se.targetPos.set(int(entry[2] + epsilon), int(entry[3] + epsilon));
+                    se.radius  = LIM<int>(int  (entry[4] + epsilon), SpotParams::minRadius, SpotParams::maxRadius);
+                    se.feather = float(entry[5]);
+                    se.opacity = float(entry[6]);
                     spot.entries.push_back(se);
 
                     if (pedited) {
@@ -7368,7 +7369,7 @@ int ProcParams::load(const Glib::ustring& fname, ParamsEdited* pedited)
 
         return 0;
     } catch (const Glib::Error& e) {
-        printf("-->%s\n", e.what().c_str());
+        printf("-->%s\n", e.what());
         setDefaults();
         return 1;
     } catch (...) {

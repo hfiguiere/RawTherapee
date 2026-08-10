@@ -2252,7 +2252,7 @@ bool Thumbnail::readImage (const Glib::ustring& fname)
 
     Glib::ustring fullFName = fname + ".rtti";
 
-    if (!Glib::file_test(fullFName, Glib::FILE_TEST_EXISTS)) {
+    if (!Glib::file_test(fullFName, Glib::FileTest::EXISTS)) {
         return false;
     }
 
@@ -2305,7 +2305,8 @@ bool Thumbnail::readImage (const Glib::ustring& fname)
 bool Thumbnail::readData  (const Glib::ustring& fname)
 {
     setlocale (LC_NUMERIC, "C"); // to set decimal point to "."
-    Glib::KeyFile keyFile;
+    Glib::RefPtr<Glib::KeyFile> pkeyFile = Glib::KeyFile::create();
+    Glib::KeyFile& keyFile = *pkeyFile;
 
     try {
         MyMutex::MyLock thmbLock (thumbMutex);
@@ -2423,7 +2424,7 @@ bool Thumbnail::readData  (const Glib::ustring& fname)
         return true;
     } catch (Glib::Error &err) {
         if (settings->verbose) {
-            printf ("Thumbnail::readData / Error code %d while reading values from \"%s\":\n%s\n", err.code(), fname.c_str(), err.what().c_str());
+            printf ("Thumbnail::readData / Error code %d while reading values from \"%s\":\n%s\n", err.code(), fname.c_str(), err.what());
         }
     } catch (...) {
         if (settings->verbose) {
@@ -2442,7 +2443,8 @@ bool Thumbnail::writeData  (const Glib::ustring& fname)
 
     try {
 
-        Glib::KeyFile keyFile;
+        Glib::RefPtr<Glib::KeyFile> pkeyFile = Glib::KeyFile::create();
+        Glib::KeyFile& keyFile = *pkeyFile;
 
         try {
             keyFile.load_from_file (fname);
@@ -2467,7 +2469,7 @@ bool Thumbnail::writeData  (const Glib::ustring& fname)
         keyFile.set_double  ("LiveThumbData", "DefaultGain", defGain);
         keyFile.set_integer ("LiveThumbData", "ScaleForSave", scaleForSave);
         keyFile.set_boolean ("LiveThumbData", "GammaCorrected", gammaCorrected);
-        Glib::ArrayHandle<double> cm ((double*)colorMatrix, 9, Glib::OWNERSHIP_NONE);
+        std::vector<double> cm ((double*)colorMatrix, (double*)colorMatrix + 9);
         keyFile.set_double_list ("LiveThumbData", "ColorMatrix", cm);
         keyFile.set_double  ("LiveThumbData", "ScaleGain", scaleGain);
 
@@ -2475,7 +2477,7 @@ bool Thumbnail::writeData  (const Glib::ustring& fname)
 
     } catch (Glib::Error& err) {
         if (settings->verbose) {
-            printf ("Thumbnail::writeData / Error code %d while reading values from \"%s\":\n%s\n", err.code(), fname.c_str(), err.what().c_str());
+            printf ("Thumbnail::writeData / Error code %d while reading values from \"%s\":\n%s\n", err.code(), fname.c_str(), err.what());
         }
     } catch (...) {
         if (settings->verbose) {
